@@ -13,10 +13,10 @@ buildscript {
 
 subprojects {
     group 'com.pakulov.kafka'
-    version '0.10.2'
+    version '1.0.0'
 
     ext {
-        kafkaVersion = "0.10.2.1"
+        kafkaVersion = '1.0.0'
     }
 
     repositories {
@@ -79,6 +79,10 @@ project(':kafka-graphite') {
     apply plugin: 'os-package'
     apply plugin: 'scala'
 
+    configurations {
+        extraLibs
+    }
+
     ext {
         ext.baseScalaVersion = '2.11'
         if (project.hasProperty('scalaVersion')) {
@@ -90,8 +94,10 @@ project(':kafka-graphite') {
     dependencies {
         compile "org.apache.kafka:kafka_$baseScalaVersion:$kafkaVersion"
         compile "com.yammer.metrics:metrics-graphite:2.2.0"
+        extraLibs group: 'com.yammer.metrics', name: 'metrics-graphite', version: '2.2.0'
 
         testCompile "org.scalatest:scalatest_$baseScalaVersion:3.0.3"
+        configurations.compile.extendsFrom(configurations.extraLibs)
     }
 
     project.afterEvaluate {
@@ -115,6 +121,12 @@ project(':kafka-graphite') {
             include 'metrics-graphite*'
             into 'libs'
         }
+    }
+
+    jar {
+        from {
+                configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+            }
     }
 }
 
